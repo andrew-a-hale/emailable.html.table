@@ -1,7 +1,7 @@
 # features
-#   alignment
-#   row and header background
-#   font-family
+#   alignment -- done
+#   row and header background -- done
+#   font-family -- done
 #   font-size-header
 #   font-size-cells
 #   font-weight-header
