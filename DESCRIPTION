@@ -22,4 +22,5 @@ Imports:
     magrittr,
     htmltools,
     stringr,
-    data.table
+    data.table,
+    purrr

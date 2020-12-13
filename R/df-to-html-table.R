@@ -23,17 +23,17 @@
 #' @export
 #'
 #' @examples
-#' htmltools::html_print(dfToHtmlTable(head(iris)))
+#' htmltools::html_print(dfToHtmlTable(head(mtcars)))
 #' htmltools::html_print(dfToHtmlTable(iris[0, ]))
-#' htmltools::html_print(dfToHtmlTable(iris, rowCollapse = "Species"))
-#' htmltools::html_print(dfToHtmlTable(mtcars, rowCollapse = "carb"))
+#' htmltools::html_print(dfToHtmlTable(iris, colToCollapse = "Species"))
+#' htmltools::html_print(dfToHtmlTable(mtcars, colToCollapse = "carb"))
 dfToHtmlTable <- function(
   df, align = "c", width = "100%", font = "\"Sintony\", Arial, sans-serif",
   headerBgColour = "#15679f", headerFontColour = "#ffffff", extraHeaderCss = NA,
   strippedBgColour = "#cccccc", strippedFontColour = "#000000", extraRowCss = NA,
   highlightRowColour = NULL, highlightRows = NULL,
   borderStyle = "1px solid black", borderLocation = "all",
-  rowCollapse = NULL
+  colToCollapse = NULL
 ) {
   stopifnot(
     ncol(df) > 1,
@@ -56,28 +56,28 @@ dfToHtmlTable <- function(
   }
 
   alignment <- strsplit(align, "") %>%
-    purrr::pluck(1) %>%
+    pluck(1) %>%
     stringr::str_replace_all(c("l" = "left", "r" = "right", "c" = "center")) %>%
     purrr::set_names(ns)
 
 
   # row collapse ------------------------------------------------------------
-  if (!is.null(rowCollapse)) {
-    df <- data.table::setorderv(df, c(rowCollapse))
+  if (!missing(colToCollapse)) {
+    df <- data.table::setorderv(df, c(colToCollapse))
   }
 
   # borders -----------------------------------------------------------------
   if (borderLocation == "all") {
-    borderCss <- stringr::str_glue("border:{borderStyle};")
+    borderCss <- str_glue("border:{borderStyle};")
   }
   else if (borderLocation == "rows") {
-    borderCss <- stringr::str_glue(
+    borderCss <- str_glue(
       "border-top:{borderStyle};",
       "border-bottom:{borderStyle};"
     )
   }
   else if (borderLocation == "cols") {
-    borderCss <- stringr::str_glue(
+    borderCss <- str_glue(
       "border-left:{borderStyle};",
       "border-right:{borderStyle};"
     )
@@ -87,74 +87,53 @@ dfToHtmlTable <- function(
   }
 
   # make header ---------------------------------------------------------
-  header <- purrr::map(
-    ns,
-    ~htmltools::tags$th(
-      .x,
-      style = stringr::str_glue(
-        "background:{headerBgColour};",
-        "color:{headerFontColour};",
-        "text-align:{alignment[[.x]]};",
-        "{borderCss}",
-        "{extraHeaderCss}",
-        .na = ""
+  header <- tags$tr(
+    map(
+      ns,
+      ~tags$th(
+        .x,
+        style = str_glue(
+          "background:{headerBgColour};",
+          "color:{headerFontColour};",
+          "text-align:{alignment[[.x]]};",
+          "{borderCss}",
+          "{extraHeaderCss}",
+          .na = ""
+        )
       )
     )
   )
 
   # make rows ---------------------------------------------------------
   if (rs == 0) {
-    rows <- htmltools::tags$tr(
-      htmltools::tags$td(
+    rows <- tags$tr(
+      tags$td(
         "No Data Available",
         colspan = cs,
-        style = stringr::str_glue(
+        style = str_glue(
           "text-align:center;",
           "{borderCss}"
         )
       )
     )
   } else {
-    rows <- purrr::map(
+    rows <- map(
       seq.int(1, rs),
       function(.r) {
-        htmltools::tags$tr(
-          purrr::map(
+        tags$tr(
+          map(
             ns,
             function(.c) {
-              if (!is.null(rowCollapse)) {
-                if (.c == rowCollapse && .r > 1 && df[.r-1, .c] == df[.r, .c]) return(NULL)
-                else if (rowCollapse == .c) {
-                  htmltools::tags$td(
-                    df[.r, .c],
-                    rowspan = sum(df[, .c] == df[.r, .c]),
-                    style = stringr::str_glue(
-                      "text-align:{alignment[[.c]]};",
-                      "background:{strippedBgColour};",
-                      "{borderCss}"
-                    )
-                  )
-                } else {
-                  htmltools::tags$td(
-                    df[.r, .c],
-                    style = stringr::str_glue(
-                      "text-align:{alignment[[.c]]};",
-                      "{borderCss}"
-                    )
-                  )
-                }
-              } else {
-                htmltools::tags$td(
-                  df[.r, .c],
-                  style = stringr::str_glue(
-                    "text-align:{alignment[[.c]]};",
-                    "{borderCss}"
-                  )
+              tags$td(
+                df[.r, .c],
+                style = str_glue(
+                  "text-align:{alignment[[.c]]};",
+                  "{borderCss}"
                 )
-              }
+              )
             }
           ),
-          style = stringr::str_glue(
+          style = str_glue(
             "background:{bg};",
             # bg ternary
             bg = if (isOdd(.r) && .r %notin% highlightRows)
@@ -178,8 +157,8 @@ dfToHtmlTable <- function(
   }
 
   # make table ---------------------------------------------------------
-  table <- htmltools::tags$table(
-    style = stringr::str_glue(
+  table <- tags$table(
+    style = str_glue(
       "border-collapse:collapse;",
       "width:{width};",
       "font-family:{font}",
@@ -190,6 +169,8 @@ dfToHtmlTable <- function(
   )
 
   # return object ---------------------------------------------------------
+  if (!missing(colToCollapse)) {
+    table <- rowCollapse(table, colToCollapse, strippedBgColour = "#cccccc")
+  }
   table
-
 }
