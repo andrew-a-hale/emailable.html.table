@@ -18,6 +18,20 @@
 #' Simple HTML Table intended to be emailed.
 #'
 #' @param df A data.frame
+#' @param align
+#' @param width
+#' @param font
+#' @param headerBgColour
+#' @param headerFontColour
+#' @param extraHeaderCss
+#' @param strippedBgColour
+#' @param strippedFontColour
+#' @param extraRowCss
+#' @param highlightRowColour
+#' @param highlightRows
+#' @param borderStyle
+#' @param borderLocation
+#' @param colToCollapse
 #'
 #' @return
 #' @export
@@ -40,7 +54,8 @@ dfToHtmlTable <- function(
     length(names(df)) > 0,
     stringr::str_length(align) == ncol(df) || stringr::str_length(align) == 1,
     length(align) == 1,
-    grep("[lcr]", align, invert = TRUE) == integer(0) # all characters in pattern
+    grep("[lcr]", align, invert = TRUE) == integer(0), # all characters in pattern
+    colToCollapse %in% names(df) || missing(colToCollapse)
   )
 
   # set up ------------------------------------------------------------------
@@ -67,16 +82,16 @@ dfToHtmlTable <- function(
   }
 
   # borders -----------------------------------------------------------------
-  if (borderLocation == "all") {
+  if (identical(borderLocation, "all")) {
     borderCss <- str_glue("border:{borderStyle};")
   }
-  else if (borderLocation == "rows") {
+  else if (identical(borderLocation, "rows")) {
     borderCss <- str_glue(
       "border-top:{borderStyle};",
       "border-bottom:{borderStyle};"
     )
   }
-  else if (borderLocation == "cols") {
+  else if (identical(borderLocation == "cols")) {
     borderCss <- str_glue(
       "border-left:{borderStyle};",
       "border-right:{borderStyle};"
