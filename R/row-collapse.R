@@ -24,7 +24,10 @@ rowCollapse <- function(htmlTable, colToCollapse, strippedBgColour) {
     table()
 
   for (i in 1:length(rows)) {
-    if (!identical(target, rows[[i]][["children"]][[1]][[ind]][["children"]][[1]]) || i == 1) {
+    if (
+      !identical(target, rows[[i]][["children"]][[1]][[ind]][["children"]][[1]]) ||
+      identical(i, 1)
+    ) {
       target <- rows[[i]][["children"]][[1]][[ind]][["children"]][[1]]
       span <- spans[[target]]
     }

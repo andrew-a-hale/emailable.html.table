@@ -77,7 +77,7 @@ dfToHtmlTable <- function(
 
   # row collapse ------------------------------------------------------------
   ## row collapse orders by the specified column
-  ## need to sanitise the specified column
+  ## need to sanitise the specified column in case they are numeric, or factors
   if (!missing(colToCollapse)) {
     df <- data.table::setorderv(df, c(colToCollapse))
     df[[colToCollapse]] <- as.character(df[[colToCollapse]])
