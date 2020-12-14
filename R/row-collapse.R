@@ -19,18 +19,16 @@ rowCollapse <- function(htmlTable, colToCollapse, strippedBgColour) {
   targets <- c()
   target <- NULL
 
-  map(rows, ~.x[["children"]][[1]][[ind]][["children"]][[1]])
+  spans <- map(rows, ~.x[["children"]][[1]][[ind]][["children"]][[1]]) %>%
+    purrr::flatten_dbl() %>%
+    table()
+
   for (i in 1:length(rows)) {
     if (!identical(target, rows[[i]][["children"]][[1]][[ind]][["children"]][[1]]) || i == 1) {
       target <- rows[[i]][["children"]][[1]][[ind]][["children"]][[1]]
-      span <- length(
-        keep(
-          rows,
-          ~identical(target, .x[["children"]][[1]][[ind]][["children"]][[1]])
-        )
-      )
+      span <- spans[[as.character(target)]]
     }
-    if (span > 1 && target %notin% targets) {
+    if (target %notin% targets) {
       rows[[i]][["children"]][[1]][[ind]][["attribs"]] <- append(
         list(rowspan = span),
         list(
@@ -40,9 +38,6 @@ rowCollapse <- function(htmlTable, colToCollapse, strippedBgColour) {
           )
         )
       )
-      targets <- append(targets, as.character(target))
-    }
-    else if (target %notin% targets) {
       targets <- append(targets, as.character(target))
     } else {
       rows[[i]][["children"]][[1]][[ind]] <- list()

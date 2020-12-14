@@ -60,8 +60,8 @@ dfToHtmlTable <- function(
     stringr::str_replace_all(c("l" = "left", "r" = "right", "c" = "center")) %>%
     purrr::set_names(ns)
 
-
   # row collapse ------------------------------------------------------------
+  ## row collapse orders by the specified column
   if (!missing(colToCollapse)) {
     df <- data.table::setorderv(df, c(colToCollapse))
   }
