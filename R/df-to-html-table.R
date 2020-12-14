@@ -77,8 +77,10 @@ dfToHtmlTable <- function(
 
   # row collapse ------------------------------------------------------------
   ## row collapse orders by the specified column
+  ## need to sanitise the specified column
   if (!missing(colToCollapse)) {
     df <- data.table::setorderv(df, c(colToCollapse))
+    df[[colToCollapse]] <- as.character(df[[colToCollapse]])
   }
 
   # borders -----------------------------------------------------------------
