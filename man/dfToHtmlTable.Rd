@@ -11,19 +11,28 @@ dfToHtmlTable(
   font = "\\"Sintony\\", Arial, sans-serif",
   headerBgColour = "#15679f",
   headerFontColour = "#ffffff",
-  extraHeaderCss = NA,
+  headerFontSize = "12px",
+  headerFontWeight = "bold",
   strippedBgColour = "#cccccc",
   strippedFontColour = "#000000",
-  extraRowCss = NA,
+  cellFontSize = "12px",
   highlightRowColour = NULL,
   highlightRows = NULL,
   borderStyle = "1px solid black",
   borderLocation = "all",
-  colToCollapse = NULL
+  colToCollapse = NULL,
+  extraHeaderCss = NA,
+  extraRowCss = NA,
+  nowrapCols = NULL,
+  title = NULL,
+  subtitle = NULL,
+  fontnotes = NULL
 )
 }
 \arguments{
 \item{df}{A data.frame}
+
+\item{fontnotes}{}
 }
 \value{
 

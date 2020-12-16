@@ -19,4 +19,3 @@ test_that("dfToHtmlTable with colToCollapse works", {
     "~/emailable.html.table//tests/test-reports/4.html"
   )
 })
-

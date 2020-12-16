@@ -2,13 +2,13 @@
 #   alignment -- done
 #   row and header background -- done
 #   font-family -- done
-#   font-size-header
-#   font-size-cells
-#   font-weight-header
-#   nowrap for a specified column
+#   font-size-header -- done
+#   font-size-cells -- done
+#   font-weight-header -- done
+#   nowrap for a specified column -- done
 #   spanner column
 #   collapse by column -- done
-#   title, subtitle, notes
+#   title, subtitle, footnotes
 #   simple borders -- done
 #   total row for numerics
 
@@ -32,6 +32,13 @@
 #' @param borderStyle
 #' @param borderLocation
 #' @param colToCollapse
+#' @param headerFontSize
+#' @param headerFontWeight
+#' @param cellFontSize
+#' @param nowrapCols
+#' @param title
+#' @param subtitle
+#' @param footnotes
 #'
 #' @return
 #' @export
@@ -41,21 +48,40 @@
 #' htmltools::html_print(dfToHtmlTable(iris[0, ]))
 #' htmltools::html_print(dfToHtmlTable(iris, colToCollapse = "Species"))
 #' htmltools::html_print(dfToHtmlTable(mtcars, colToCollapse = "carb"))
-dfToHtmlTable <- function(
-  df, align = "c", width = "100%", font = "\"Sintony\", Arial, sans-serif",
-  headerBgColour = "#15679f", headerFontColour = "#ffffff", extraHeaderCss = NA,
-  strippedBgColour = "#cccccc", strippedFontColour = "#000000", extraRowCss = NA,
-  highlightRowColour = NULL, highlightRows = NULL,
-  borderStyle = "1px solid black", borderLocation = "all",
-  colToCollapse = NULL
-) {
+dfToHtmlTable <- function(df,
+                          align = "c",
+                          width = "100%",
+                          font = "\"Sintony\", Arial, sans-serif",
+                          headerBgColour = "#15679f",
+                          headerFontColour = "#ffffff",
+                          headerFontSize = "12px",
+                          headerFontWeight = "bold",
+                          strippedBgColour = "#cccccc",
+                          strippedFontColour = "#000000",
+                          cellFontSize = "12px",
+                          highlightRowColour = NULL,
+                          highlightRows = NULL,
+                          borderStyle = "1px solid black",
+                          borderLocation = "all",
+                          colToCollapse = NULL,
+                          extraHeaderCss = NA,
+                          extraRowCss = NA,
+                          nowrapCols = NULL,
+                          title = NULL,
+                          subtitle = NULL,
+                          footnotes = NULL) {
   stopifnot(
     ncol(df) > 1,
     length(names(df)) > 0,
     stringr::str_length(align) == ncol(df) || stringr::str_length(align) == 1,
     length(align) == 1,
     grep("[lcr]", align, invert = TRUE) == integer(0), # all characters in pattern
-    colToCollapse %in% names(df) || missing(colToCollapse)
+    colToCollapse %in% names(df) || missing(colToCollapse),
+    nowrapCols %in% names(df) || missing(nowrapCols),
+    !missing(title) && !missing(subtitle) || missing(subtitle), # must have a title if subtitle exists
+    borderLocation %in% c("all", "row", "col"),
+    headerFontWeight %in% c("normal", "bold") ||
+      (is.numeric(headerFontWeight) && between(headerFontWeight, 100, 900))
   )
 
   # set up ------------------------------------------------------------------
@@ -107,15 +133,19 @@ dfToHtmlTable <- function(
   header <- tags$tr(
     map(
       ns,
-      ~tags$th(
+      ~ tags$th(
         .x,
         style = str_glue(
           "background:{headerBgColour};",
           "color:{headerFontColour};",
           "text-align:{alignment[[.x]]};",
+          "font-size:{headerFontSize};",
+          "font-weight:{headerFontWeight};",
+          "white-space:{ws};",
           "{borderCss}",
           "{extraHeaderCss}",
-          .na = ""
+          .na = "",
+          ws = if (.x %in% nowrapCols) "nowrap" else "normal"
         )
       )
     )
@@ -129,6 +159,7 @@ dfToHtmlTable <- function(
         colspan = cs,
         style = str_glue(
           "text-align:center;",
+          "font-size:{cellFontSize};",
           "{borderCss}"
         )
       )
@@ -151,20 +182,25 @@ dfToHtmlTable <- function(
             }
           ),
           style = str_glue(
+            "font-size:{cellFontSize};",
             "background:{bg};",
             # bg ternary
-            bg = if (isOdd(.r) && .r %notin% highlightRows)
+            bg = if (isOdd(.r) && .r %notin% highlightRows) {
               strippedBgColour
-            else if (.r %in% highlightRows)
+            } else if (.r %in% highlightRows) {
               highlightRowColour
-            else "#ffffff",
+            } else {
+              "#ffffff"
+            },
             "color:{font};",
             # font ternary
-            font = if (isOdd(.r) && .r %notin% highlightRows)
+            font = if (isOdd(.r) && .r %notin% highlightRows) {
               strippedFontColour
-            else if (.r %in% highlightRows)
+            } else if (.r %in% highlightRows) {
               "#ffffff"
-            else "#000000",
+            } else {
+              "#000000"
+            },
             "{extraRowCss}",
             .na = ""
           )
@@ -186,8 +222,25 @@ dfToHtmlTable <- function(
   )
 
   # return object ---------------------------------------------------------
+  ## collapse rows
   if (!missing(colToCollapse)) {
     table <- rowCollapse(table, colToCollapse, strippedBgColour = "#cccccc")
   }
+
+  ## add title
+  if (!missing(title)) {
+
+  }
+
+  ## add subtitle
+  if (!missing(subtitle)) {
+
+  }
+
+  ## add foot notes
+  if (!missing(footnotes)) {
+
+  }
+
   table
 }

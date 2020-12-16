@@ -9,45 +9,43 @@
 #'
 #' @examples
 rowCollapse <- function(htmlTable, colToCollapse, strippedBgColour) {
-
   ind <- purrr::detect_index(
-    htmlTable[["children"]][[1]][["children"]][[1]],
-    ~identical(.x[["children"]][[1]], colToCollapse)
+    htmlTable$children[[1]]$children[[1]],
+    ~ identical(.x$children[[1]], colToCollapse)
   )
 
-  rows <- htmlTable[["children"]][[2]]
+  rows <- htmlTable$children[[2]]
   targets <- c()
   target <- NULL
 
-  spans <- map(rows, ~.x[["children"]][[1]][[ind]][["children"]][[1]]) %>%
+  spans <- map(rows, ~ .x$children[[1]][[ind]]$children[[1]]) %>%
     purrr::flatten_chr() %>%
     table()
 
   for (i in 1:length(rows)) {
     if (
-      !identical(target, rows[[i]][["children"]][[1]][[ind]][["children"]][[1]]) ||
-      identical(i, 1)
+      !identical(target, rows[[i]]$children[[1]][[ind]]$children[[1]]) ||
+        identical(i, 1)
     ) {
-      target <- rows[[i]][["children"]][[1]][[ind]][["children"]][[1]]
+      target <- rows[[i]]$children[[1]][[ind]]$children[[1]]
       span <- spans[[target]]
     }
     if (target %notin% targets) {
-      rows[[i]][["children"]][[1]][[ind]][["attribs"]] <- append(
+      rows[[i]]$children[[1]][[ind]]$attribs <- append(
         list(rowspan = span),
         list(
           style = paste0(
             "background:", strippedBgColour, ";",
-            rows[[i]][["children"]][[1]][[ind]][["attribs"]][["style"]]
+            rows[[i]]$children[[1]][[ind]]$attribs$style
           )
         )
       )
       targets <- append(targets, as.character(target))
     } else {
-      rows[[i]][["children"]][[1]][[ind]] <- list()
+      rows[[i]]$children[[1]][[ind]] <- list()
     }
   }
 
-  htmlTable[["children"]][[2]] <- purrr::compact(rows)
+  htmlTable$children[[2]] <- purrr::compact(rows)
   htmlTable
-
 }
