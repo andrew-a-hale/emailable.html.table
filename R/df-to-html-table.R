@@ -51,7 +51,7 @@
 dfToHtmlTable <- function(df,
                           align = "c",
                           width = "100%",
-                          font = "\"Sintony\", Arial, sans-serif",
+                          font = "Arial, sans-serif",
                           headerBgColour = "#15679f",
                           headerFontColour = "#ffffff",
                           headerFontSize = "12px",
@@ -73,7 +73,6 @@ dfToHtmlTable <- function(df,
   stopifnot(
     ncol(df) > 1,
     length(names(df)) > 0,
-    stringr::str_length(align) == ncol(df) || stringr::str_length(align) == 1,
     length(align) == 1,
     grep("[lcr]", align, invert = TRUE) == integer(0), # all characters in pattern
     colToCollapse %in% names(df) || missing(colToCollapse),
