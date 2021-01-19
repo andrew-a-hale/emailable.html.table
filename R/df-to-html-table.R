@@ -241,5 +241,5 @@ dfToHtmlTable <- function(df,
 
   }
 
-  table
+  htmltools::HTML(as.character(table))
 }
