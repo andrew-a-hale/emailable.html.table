@@ -8,7 +8,7 @@
 #   nowrap for a specified column -- done
 #   spanner column
 #   collapse by column -- done
-#   title, subtitle, footnotes
+#   title, subtitle, footnotes -- done
 #   simple borders -- done
 #   total row for numerics
 
@@ -39,6 +39,7 @@
 #' @param title
 #' @param subtitle
 #' @param footnotes
+#' @param titleAlignment
 #'
 #' @return
 #' @export
@@ -69,7 +70,8 @@ dfToHtmlTable <- function(df,
                           nowrapCols = NULL,
                           title = NULL,
                           subtitle = NULL,
-                          footnotes = NULL) {
+                          footnotes = NULL,
+                          titleAlignment = "left") {
   stopifnot(
     ncol(df) > 1,
     length(names(df)) > 0,
@@ -228,18 +230,46 @@ dfToHtmlTable <- function(df,
 
   ## add title
   if (!missing(title)) {
-
+    title <- tags$h3(
+      style = str_glue(
+        "text-align:{titleAlignment};",
+        "margin-top: 0px;",
+        "margin-bottom: 5px;"
+      ),
+      title
+    )
   }
 
   ## add subtitle
   if (!missing(subtitle)) {
-
+    subtitle <- tags$h4(
+      style = str_glue(
+        "text-align:{titleAlignment};",
+        "margin-top: 0px;",
+        "margin-bottom: 5px;"
+      ),
+      subtitle
+    )
   }
 
   ## add foot notes
   if (!missing(footnotes)) {
+    footnotes <- htmltools::tagList(
+      map(
+        footnotes,
+        ~ tags$p(
+        style = str_glue(
+          "margin-top: 0px;",
+          "margin-bottom: 0px;",
+          "font-size: 12px"
+        ),
+        .x
+        )
+      )
+    )
 
   }
-
-  htmltools::HTML(as.character(table))
+  htmltools::HTML(as.character(htmltools::tagList(
+    title, subtitle, table, footnotes
+  )))
 }
