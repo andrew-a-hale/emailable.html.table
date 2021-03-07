@@ -3,5 +3,4 @@
 export("%notin%")
 export(dfToHtmlTable)
 export(isOdd)
-export(pasteReplaceNa)
 export(rowCollapse)

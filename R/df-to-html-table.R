@@ -41,6 +41,7 @@
 #' @param subtitle table subtitle, requires title
 #' @param footnotes table foot notes
 #' @param titleAlignment title alignment
+#' @param tableLineHeight table line height
 #'
 #' @return
 #' @export
@@ -50,6 +51,7 @@
 #' htmltools::html_print(dfToHtmlTable(iris[0, ]))
 #' htmltools::html_print(dfToHtmlTable(iris, colToCollapse = "Species"))
 #' htmltools::html_print(dfToHtmlTable(mtcars, colToCollapse = "carb"))
+#' htmltools::html_print(dfToHtmlTable(mtcars, colToCollapse = "carb", tableLineHeight = 1))
 dfToHtmlTable <- function(df,
                           align = "c",
                           width = "100%",
@@ -66,13 +68,14 @@ dfToHtmlTable <- function(df,
                           borderStyle = "1px solid black",
                           borderLocation = "all",
                           colToCollapse = NULL,
-                          extraHeaderCss = NA,
-                          extraRowCss = NA,
+                          extraHeaderCss = NULL,
+                          extraRowCss = NULL,
                           nowrapCols = NULL,
                           title = NULL,
                           subtitle = NULL,
                           footnotes = NULL,
-                          titleAlignment = "left") {
+                          titleAlignment = "left",
+                          tableLineHeight = 1.25) {
   stopifnot(
     ncol(df) > 1,
     length(names(df)) > 0,
@@ -122,22 +125,22 @@ dfToHtmlTable <- function(df,
 
   # borders -----------------------------------------------------------------
   if (identical(borderLocation, "all")) {
-    borderCss <- pasteReplaceNa("border:", borderStyle)
+    borderCss <- paste0("border:", borderStyle)
   }
   else if (identical(borderLocation, "rows")) {
-    borderCss <- pasteReplaceNa(
+    borderCss <- paste0(
       "border-top:", borderStyle, ";",
       "border-bottom:", borderStyle, ";"
     )
   }
   else if (identical(borderLocation, "cols")) {
-    borderCss <- pasteReplaceNa(
+    borderCss <- paste0(
       "border-left:", borderStyle, ";",
       "border-right:", borderStyle, ";"
     )
   }
   else {
-    borderCss <- NA
+    borderCss <- NULL
   }
 
   # make header ---------------------------------------------------------
@@ -146,7 +149,7 @@ dfToHtmlTable <- function(df,
       function(.x) {
         htmltools::tags$th(
           .x,
-          style = pasteReplaceNa(
+          style = paste0(
             "background:", headerBgColour, ";",
             "color:", headerFontColour, ";",
             "text-align:", alignment[[.x]], ";",
@@ -168,7 +171,7 @@ dfToHtmlTable <- function(df,
       htmltools::tags$td(
         "No Data Available",
         colspan = cs,
-        style = pasteReplaceNa(
+        style = paste0(
           "text-align:center;",
           "font-size:", cellFontSize, ";",
           borderCss, ";"
@@ -183,7 +186,7 @@ dfToHtmlTable <- function(df,
             function(.c) {
               htmltools::tags$td(
                 df[.r, .c],
-                style = pasteReplaceNa(
+                style = paste0(
                   "text-align:", alignment[[.c]], ";",
                   borderCss, ";"
                 )
@@ -191,7 +194,7 @@ dfToHtmlTable <- function(df,
             },
             ns
           ),
-          style = pasteReplaceNa(
+          style = paste0(
             "font-size:", cellFontSize, ";",
             "background:",
             # bg ternary
@@ -221,10 +224,11 @@ dfToHtmlTable <- function(df,
 
   # make table ---------------------------------------------------------
   table <- htmltools::tags$table(
-    style = pasteReplaceNa(
+    style = paste0(
       "border-collapse:collapse;",
       "width:", width, ";",
-      "font-family:", font, ";"
+      "font-family:", font, ";",
+      "line-height:", tableLineHeight, ";"
     ),
     header,
     rows
@@ -239,7 +243,7 @@ dfToHtmlTable <- function(df,
   ## add title
   if (!missing(title)) {
     title <- htmltools::tags$h3(
-      style = pasteReplaceNa(
+      style = paste0(
         "text-align:", titleAlignment, ";",
         "margin-top: 0px;",
         "margin-bottom: 5px;"
@@ -251,7 +255,7 @@ dfToHtmlTable <- function(df,
   ## add subtitle
   if (!missing(subtitle)) {
     subtitle <- htmltools::tags$h4(
-      style = pasteReplaceNa(
+      style = paste0(
         "text-align:", titleAlignment, ";",
         "margin-top: 0px;",
         "margin-bottom: 5px;"

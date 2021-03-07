@@ -21,13 +21,14 @@ dfToHtmlTable(
   borderStyle = "1px solid black",
   borderLocation = "all",
   colToCollapse = NULL,
-  extraHeaderCss = NA,
-  extraRowCss = NA,
+  extraHeaderCss = NULL,
+  extraRowCss = NULL,
   nowrapCols = NULL,
   title = NULL,
   subtitle = NULL,
   footnotes = NULL,
-  titleAlignment = "left"
+  titleAlignment = "left",
+  tableLineHeight = 1.25
 )
 }
 \arguments{
@@ -77,6 +78,8 @@ so that the value does not repeat}
 \item{footnotes}{table foot notes}
 
 \item{titleAlignment}{title alignment}
+
+\item{tableLineHeight}{table line height}
 }
 \value{
 
@@ -89,4 +92,5 @@ htmltools::html_print(dfToHtmlTable(head(mtcars)))
 htmltools::html_print(dfToHtmlTable(iris[0, ]))
 htmltools::html_print(dfToHtmlTable(iris, colToCollapse = "Species"))
 htmltools::html_print(dfToHtmlTable(mtcars, colToCollapse = "carb"))
+htmltools::html_print(dfToHtmlTable(mtcars, colToCollapse = "carb", tableLineHeight = 1))
 }
