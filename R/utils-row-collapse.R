@@ -6,23 +6,16 @@
 #'
 #' @return
 #' @export
-#'
-#' @examples
 rowCollapse <- function(htmlTable, colToCollapse, strippedBgColour) {
-  ind <- purrr::detect_index(
-    htmlTable$children[[1]]$children[[1]],
-    ~ identical(.x$children[[1]], colToCollapse)
-  )
+  ind <- which(names(htmlTable$children[[1]]$children[[1]]) == colToCollapse)
 
   rows <- htmlTable$children[[2]]
   targets <- c()
   target <- NULL
 
-  spans <- map(rows, ~ .x$children[[1]][[ind]]$children[[1]]) %>%
-    purrr::flatten_chr() %>%
-    table()
+  spans <- table(unlist(Map(function(.x) .x$children[[1]][[ind]]$children[[1]], rows)))
 
-  for (i in 1:length(rows)) {
+  for (i in seq_along(rows)) {
     if (
       !identical(target, rows[[i]]$children[[1]][[ind]]$children[[1]]) ||
         identical(i, 1)
@@ -46,6 +39,6 @@ rowCollapse <- function(htmlTable, colToCollapse, strippedBgColour) {
     }
   }
 
-  htmlTable$children[[2]] <- purrr::compact(rows)
+  htmlTable$children[[2]] <- rows
   htmlTable
 }

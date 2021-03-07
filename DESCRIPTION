@@ -18,8 +18,4 @@ Config/testthat/edition: 2
 Depends: 
     R (>= 2.10)
 Imports: 
-    magrittr,
-    htmltools,
-    stringr,
-    data.table,
-    purrr
+    htmltools

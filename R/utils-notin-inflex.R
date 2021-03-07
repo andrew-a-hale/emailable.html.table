@@ -8,4 +8,4 @@
 #' "a" %notin% LETTERS
 #' "A" %notin% LETTERS
 #' 1 %notin% NULL
-`%notin%` <- purrr::negate(`%in%`)
+`%notin%` <- Negate(`%in%`)

@@ -4,7 +4,7 @@
 \alias{\%notin\%}
 \title{Not In operator}
 \usage{
-x \%notin\% table
+... \%notin\% NA
 }
 \description{
 Not In operator

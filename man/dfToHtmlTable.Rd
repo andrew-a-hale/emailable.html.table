@@ -8,7 +8,7 @@ dfToHtmlTable(
   df,
   align = "c",
   width = "100\%",
-  font = "\\"Sintony\\", Arial, sans-serif",
+  font = "Arial, sans-serif",
   headerBgColour = "#15679f",
   headerFontColour = "#ffffff",
   headerFontSize = "12px",
@@ -26,13 +26,57 @@ dfToHtmlTable(
   nowrapCols = NULL,
   title = NULL,
   subtitle = NULL,
-  fontnotes = NULL
+  footnotes = NULL,
+  titleAlignment = "left"
 )
 }
 \arguments{
 \item{df}{A data.frame}
 
-\item{fontnotes}{}
+\item{align}{string to determine alignment eg. "lcr". last character to used to fill remainder}
+
+\item{width}{table width}
+
+\item{font}{font family}
+
+\item{headerBgColour}{header bg colour}
+
+\item{headerFontColour}{header font colour}
+
+\item{headerFontSize}{header font size}
+
+\item{headerFontWeight}{header font weight}
+
+\item{strippedBgColour}{stripped row bg colour}
+
+\item{strippedFontColour}{stripped row font colour}
+
+\item{cellFontSize}{cell font size}
+
+\item{highlightRowColour}{highlight row colour}
+
+\item{highlightRows}{highlight row indices (positions)}
+
+\item{borderStyle}{css for border style, eg. "1px solid black"}
+
+\item{borderLocation}{border location, can be "all", "row", or "col"}
+
+\item{colToCollapse}{col to collapse on. this applies row spans and orders by the column
+so that the value does not repeat}
+
+\item{extraHeaderCss}{extra header css}
+
+\item{extraRowCss}{extra row css}
+
+\item{nowrapCols}{cols to apply nowrap to. see css white-space nowrap.}
+
+\item{title}{table title}
+
+\item{subtitle}{table subtitle, requires title}
+
+\item{footnotes}{table foot notes}
+
+\item{titleAlignment}{title alignment}
 }
 \value{
 

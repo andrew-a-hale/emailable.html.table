@@ -18,28 +18,29 @@
 #' Simple HTML Table intended to be emailed.
 #'
 #' @param df A data.frame
-#' @param align
-#' @param width
-#' @param font
-#' @param headerBgColour
-#' @param headerFontColour
-#' @param extraHeaderCss
-#' @param strippedBgColour
-#' @param strippedFontColour
-#' @param extraRowCss
-#' @param highlightRowColour
-#' @param highlightRows
-#' @param borderStyle
-#' @param borderLocation
-#' @param colToCollapse
-#' @param headerFontSize
-#' @param headerFontWeight
-#' @param cellFontSize
-#' @param nowrapCols
-#' @param title
-#' @param subtitle
-#' @param footnotes
-#' @param titleAlignment
+#' @param align string to determine alignment eg. "lcr". last character to used to fill remainder
+#' @param width table width
+#' @param font font family
+#' @param headerBgColour header bg colour
+#' @param headerFontColour header font colour
+#' @param extraHeaderCss extra header css
+#' @param strippedBgColour stripped row bg colour
+#' @param strippedFontColour stripped row font colour
+#' @param extraRowCss extra row css
+#' @param highlightRowColour highlight row colour
+#' @param highlightRows highlight row indices (positions)
+#' @param borderStyle css for border style, eg. "1px solid black"
+#' @param borderLocation border location, can be "all", "row", or "col"
+#' @param colToCollapse col to collapse on. this applies row spans and orders by the column
+#' so that the value does not repeat
+#' @param headerFontSize header font size
+#' @param headerFontWeight header font weight
+#' @param cellFontSize cell font size
+#' @param nowrapCols cols to apply nowrap to. see css white-space nowrap.
+#' @param title table title
+#' @param subtitle table subtitle, requires title
+#' @param footnotes table foot notes
+#' @param titleAlignment title alignment
 #'
 #' @return
 #' @export
@@ -82,48 +83,57 @@ dfToHtmlTable <- function(df,
     !missing(title) && !missing(subtitle) || missing(subtitle), # must have a title if subtitle exists
     borderLocation %in% c("all", "row", "col"),
     headerFontWeight %in% c("normal", "bold") ||
-      (is.numeric(headerFontWeight) && between(headerFontWeight, 100, 900))
+      (is.numeric(headerFontWeight) && headerFontWeight >= 100 && headerFontWeight <= 900)
   )
 
   # set up ------------------------------------------------------------------
   rs <- nrow(df)
   cs <- ncol(df)
   ns <- names(df)
-  as <- stringr::str_length(align)
+  as <- nchar(align)
 
   # parse alignment ---------------------------------------------------------
   ## recycle last character to make sure all columns have an alignment
   if (as < cs) {
-    align <- stringr::str_pad(align, cs, side = "right", pad = substr(align, as, as))
+    align <- paste0(align, strrep(substr(align, as, as), cs - as))
   }
 
-  alignment <- strsplit(align, "") %>%
-    pluck(1) %>%
-    stringr::str_replace_all(c("l" = "left", "r" = "right", "c" = "center")) %>%
-    purrr::set_names(ns)
+  alignment <- setNames(
+    gsub(
+      "l", "left",
+      gsub(
+        "c", "center",
+        gsub(
+          "r", "right",
+          strsplit(align, "")[[1]]
+        )
+      )
+    ),
+    ns
+  )
 
   # row collapse ------------------------------------------------------------
   ## row collapse orders by the specified column
   ## need to sanitise the specified column in case they are numeric, or factors
   if (!missing(colToCollapse)) {
-    df <- data.table::setorderv(df, c(colToCollapse))
+    df <- df[order(df[[colToCollapse]]), ]
     df[[colToCollapse]] <- as.character(df[[colToCollapse]])
   }
 
   # borders -----------------------------------------------------------------
   if (identical(borderLocation, "all")) {
-    borderCss <- str_glue("border:{borderStyle};")
+    borderCss <- pasteReplaceNa("border:", borderStyle)
   }
   else if (identical(borderLocation, "rows")) {
-    borderCss <- str_glue(
-      "border-top:{borderStyle};",
-      "border-bottom:{borderStyle};"
+    borderCss <- pasteReplaceNa(
+      "border-top:", borderStyle, ";",
+      "border-bottom:", borderStyle, ";"
     )
   }
-  else if (identical(borderLocation == "cols")) {
-    borderCss <- str_glue(
-      "border-left:{borderStyle};",
-      "border-right:{borderStyle};"
+  else if (identical(borderLocation, "cols")) {
+    borderCss <- pasteReplaceNa(
+      "border-left:", borderStyle, ";",
+      "border-right:", borderStyle, ";"
     )
   }
   else {
@@ -131,60 +141,59 @@ dfToHtmlTable <- function(df,
   }
 
   # make header ---------------------------------------------------------
-  header <- tags$tr(
-    map(
-      ns,
-      ~ tags$th(
-        .x,
-        style = str_glue(
-          "background:{headerBgColour};",
-          "color:{headerFontColour};",
-          "text-align:{alignment[[.x]]};",
-          "font-size:{headerFontSize};",
-          "font-weight:{headerFontWeight};",
-          "white-space:{ws};",
-          "{borderCss}",
-          "{extraHeaderCss}",
-          .na = "",
-          ws = if (.x %in% nowrapCols) "nowrap" else "normal"
+  header <- htmltools::tags$tr(
+    Map(
+      function(.x) {
+        htmltools::tags$th(
+          .x,
+          style = pasteReplaceNa(
+            "background:", headerBgColour, ";",
+            "color:", headerFontColour, ";",
+            "text-align:", alignment[[.x]], ";",
+            "font-size:", headerFontSize, ";",
+            "font-weight:", headerFontWeight, ";",
+            "white-space:", if (.x %in% nowrapCols) "nowrap" else "normal", ";",
+            borderCss, ";",
+            extraHeaderCss, ";"
+          )
         )
-      )
+      },
+      ns
     )
   )
 
   # make rows ---------------------------------------------------------
   if (rs == 0) {
-    rows <- tags$tr(
-      tags$td(
+    rows <- htmltools::tags$tr(
+      htmltools::tags$td(
         "No Data Available",
         colspan = cs,
-        style = str_glue(
+        style = pasteReplaceNa(
           "text-align:center;",
-          "font-size:{cellFontSize};",
-          "{borderCss}"
+          "font-size:", cellFontSize, ";",
+          borderCss, ";"
         )
       )
     )
   } else {
-    rows <- map(
-      seq.int(1, rs),
+    rows <- Map(
       function(.r) {
-        tags$tr(
-          map(
-            ns,
+        htmltools::tags$tr(
+          Map(
             function(.c) {
-              tags$td(
+              htmltools::tags$td(
                 df[.r, .c],
-                style = str_glue(
-                  "text-align:{alignment[[.c]]};",
-                  "{borderCss}"
+                style = pasteReplaceNa(
+                  "text-align:", alignment[[.c]], ";",
+                  borderCss, ";"
                 )
               )
-            }
+            },
+            ns
           ),
-          style = str_glue(
-            "font-size:{cellFontSize};",
-            "background:{bg};",
+          style = pasteReplaceNa(
+            "font-size:", cellFontSize, ";",
+            "background:",
             # bg ternary
             bg = if (isOdd(.r) && .r %notin% highlightRows) {
               strippedBgColour
@@ -192,8 +201,8 @@ dfToHtmlTable <- function(df,
               highlightRowColour
             } else {
               "#ffffff"
-            },
-            "color:{font};",
+            }, ";",
+            "color:",
             # font ternary
             font = if (isOdd(.r) && .r %notin% highlightRows) {
               strippedFontColour
@@ -201,22 +210,21 @@ dfToHtmlTable <- function(df,
               "#ffffff"
             } else {
               "#000000"
-            },
-            "{extraRowCss}",
-            .na = ""
+            }, ";",
+            extraRowCss, ";"
           )
         )
-      }
+      },
+      seq_len(rs)
     )
   }
 
   # make table ---------------------------------------------------------
-  table <- tags$table(
-    style = str_glue(
+  table <- htmltools::tags$table(
+    style = pasteReplaceNa(
       "border-collapse:collapse;",
-      "width:{width};",
-      "font-family:{font}",
-      .na = ""
+      "width:", width, ";",
+      "font-family:", font, ";"
     ),
     header,
     rows
@@ -230,9 +238,9 @@ dfToHtmlTable <- function(df,
 
   ## add title
   if (!missing(title)) {
-    title <- tags$h3(
-      style = str_glue(
-        "text-align:{titleAlignment};",
+    title <- htmltools::tags$h3(
+      style = pasteReplaceNa(
+        "text-align:", titleAlignment, ";",
         "margin-top: 0px;",
         "margin-bottom: 5px;"
       ),
@@ -242,9 +250,9 @@ dfToHtmlTable <- function(df,
 
   ## add subtitle
   if (!missing(subtitle)) {
-    subtitle <- tags$h4(
-      style = str_glue(
-        "text-align:{titleAlignment};",
+    subtitle <- htmltools::tags$h4(
+      style = pasteReplaceNa(
+        "text-align:", titleAlignment, ";",
         "margin-top: 0px;",
         "margin-bottom: 5px;"
       ),
@@ -255,19 +263,20 @@ dfToHtmlTable <- function(df,
   ## add foot notes
   if (!missing(footnotes)) {
     footnotes <- htmltools::tagList(
-      map(
-        footnotes,
-        ~ tags$p(
-        style = str_glue(
-          "margin-top: 0px;",
-          "margin-bottom: 0px;",
-          "font-size: 12px"
-        ),
-        .x
-        )
+      Map(
+        function(.x) {
+          htmltools::tags$p(
+            style = paste0(
+              "margin-top: 0px;",
+              "margin-bottom: 0px;",
+              "font-size: 12px"
+            ),
+            .x
+          )
+        },
+        footnotes
       )
     )
-
   }
   htmltools::HTML(as.character(htmltools::tagList(
     title, subtitle, table, footnotes
