@@ -88,9 +88,9 @@ dfToHtmlTable <- function(df,
     },
     "invalid header font weight given" = {
       headerFontWeight %in% c("normal", "bold") ||
-      (is.numeric(headerFontWeight) &&
-       headerFontWeight >= 100 &&
-       headerFontWeight <= 900)
+        (is.numeric(headerFontWeight) &&
+          headerFontWeight >= 100 &&
+          headerFontWeight <= 900)
     },
     "invalid highlightJson given" = {
       missing(highlightJson) || jsonlite::validate(highlightJson)
@@ -153,7 +153,8 @@ dfToHtmlTable <- function(df,
 
   # row highlighting --------------------------------------------------------
   if (!missing(highlightJson)) {
-    highlightRows <- unlist(jsonlite::fromJSON(highlightJson)) #returns named list
+    # returns named list
+    highlightRows <- unlist(jsonlite::fromJSON(highlightJson))
   } else {
     highlightRows <- NULL
   }
