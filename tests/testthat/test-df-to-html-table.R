@@ -9,6 +9,10 @@ test_that("dfToHtmlTable works", {
     ),
     "character"
   )
+  expect_type(
+    dfToHtmlTable(mtcars, highlightJson = '{"#FF5733": [1, 4, 9], "#5B33FF": [10, 20, 30]}'),
+    "character"
+  )
 })
 
 test_that("dfToHtmlTable with colToCollapse works", {

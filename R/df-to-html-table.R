@@ -18,7 +18,8 @@
 #' Simple HTML Table intended to be emailed.
 #'
 #' @param df A data.frame
-#' @param align string to determine alignment eg. "lcr". last character to used to fill remainder
+#' @param align string to determine alignment eg. "lcr".
+#' last character to used to fill remainder
 #' @param width table width
 #' @param font font family
 #' @param headerBgColour header bg colour
@@ -27,12 +28,10 @@
 #' @param strippedBgColour stripped row bg colour
 #' @param strippedFontColour stripped row font colour
 #' @param extraRowCss extra row css
-#' @param highlightRowColour highlight row colour
-#' @param highlightRows highlight row indices (positions)
 #' @param borderStyle css for border style, eg. "1px solid black"
 #' @param borderLocation border location, can be "all", "row", or "col"
-#' @param colToCollapse col to collapse on. this applies row spans and orders by the column
-#' so that the value does not repeat
+#' @param colToCollapse col to collapse on. this applies row spans
+#' and orders by the column so that the value does not repeat
 #' @param headerFontSize header font size
 #' @param headerFontWeight header font weight
 #' @param cellFontSize cell font size
@@ -42,6 +41,8 @@
 #' @param footnotes table foot notes
 #' @param titleAlignment title alignment
 #' @param tableLineHeight table line height
+#' @param highlightJson config for row highlights
+#' eg. {"#FF5733": [1, 4, 9], "#5B33FF": [10, 20, 30]}
 #'
 #' @return
 #' @export
@@ -51,7 +52,6 @@
 #' htmltools::html_print(dfToHtmlTable(iris[0, ]))
 #' htmltools::html_print(dfToHtmlTable(iris, colToCollapse = "Species"))
 #' htmltools::html_print(dfToHtmlTable(mtcars, colToCollapse = "carb"))
-#' htmltools::html_print(dfToHtmlTable(mtcars, colToCollapse = "carb", tableLineHeight = 1))
 dfToHtmlTable <- function(df,
                           align = "c",
                           width = "100%",
@@ -63,8 +63,7 @@ dfToHtmlTable <- function(df,
                           strippedBgColour = "#cccccc",
                           strippedFontColour = "#000000",
                           cellFontSize = "12px",
-                          highlightRowColour = NULL,
-                          highlightRows = NULL,
+                          highlightJson = NULL,
                           borderStyle = "1px solid black",
                           borderLocation = "all",
                           colToCollapse = NULL,
@@ -80,13 +79,22 @@ dfToHtmlTable <- function(df,
     ncol(df) > 1,
     length(names(df)) > 0,
     length(align) == 1,
-    grep("[lcr]", align, invert = TRUE) == integer(0), # all characters in pattern
+    grep("[lcr]", align, invert = TRUE) == integer(0),
     colToCollapse %in% names(df) || missing(colToCollapse),
     nowrapCols %in% names(df) || missing(nowrapCols),
-    !missing(title) && !missing(subtitle) || missing(subtitle), # must have a title if subtitle exists
-    borderLocation %in% c("all", "row", "col"),
-    headerFontWeight %in% c("normal", "bold") ||
-      (is.numeric(headerFontWeight) && headerFontWeight >= 100 && headerFontWeight <= 900)
+    !missing(title) && !missing(subtitle) || missing(subtitle),
+    "invalid borderLocation provided" = {
+      borderLocation %in% c("all", "row", "col")
+    },
+    "invalid header font weight given" = {
+      headerFontWeight %in% c("normal", "bold") ||
+      (is.numeric(headerFontWeight) &&
+       headerFontWeight >= 100 &&
+       headerFontWeight <= 900)
+    },
+    "invalid highlightJson given" = {
+      missing(highlightJson) || jsonlite::validate(highlightJson)
+    }
   )
 
   # set up ------------------------------------------------------------------
@@ -141,6 +149,13 @@ dfToHtmlTable <- function(df,
   }
   else {
     borderCss <- NULL
+  }
+
+  # row highlighting --------------------------------------------------------
+  if (!missing(highlightJson)) {
+    highlightRows <- unlist(jsonlite::fromJSON(highlightJson)) #returns named list
+  } else {
+    highlightRows <- NULL
   }
 
   # make header ---------------------------------------------------------
@@ -198,16 +213,16 @@ dfToHtmlTable <- function(df,
             "font-size:", cellFontSize, ";",
             "background:",
             # bg ternary
-            bg = if (isOdd(.r) && .r %notin% highlightRows) {
+            if (isOdd(.r) && .r %notin% highlightRows) {
               strippedBgColour
             } else if (.r %in% highlightRows) {
-              highlightRowColour
+              names(which(highlightRows == .r))
             } else {
               "#ffffff"
             }, ";",
             "color:",
             # font ternary
-            font = if (isOdd(.r) && .r %notin% highlightRows) {
+            if (isOdd(.r) && .r %notin% highlightRows) {
               strippedFontColour
             } else if (.r %in% highlightRows) {
               "#ffffff"
